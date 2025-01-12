@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assets vs Liabilities Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #2b5876, #4e4376);
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .game-container {
+            margin: 50px auto;
+            max-width: 440px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .image-container img {
+            width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+        }
+
+        .question {
+            margin: 20px 0;
+            font-size: 1.2em;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .score {
+            margin: 20px 0;
+            font-size: 1.5em;
+        }
+
+        .lifelines {
+            font-size: 1.2em;
+            color: #ff4d4d;
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            color: black;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 1000;
+        }
+
+        .popup button {
+            margin: 10px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="image-container">
+            <img id="scenario-image" src="" alt="Scenario Image">
+        </div>
+        <div class="question" id="scenario-text">Loading...</div>
+        <div class="buttons">
+            <button onclick="answer('asset')">Asset</button>
+            <button onclick="answer('liability')">Liability</button>
+        </div>
+        <div class="score" id="score">Score: 0</div>
+        <div class="lifelines" id="lifelines">Lifelines: ❤❤❤</div>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <div class="popup" id="popup">
+        <h2>Game Over!</h2>
+        <p id="final-score">Your Score: 0</p>
+        <p>You have to learn more about assets and liabilities?</p>
+        <button onclick="restartGame()">Play Again</button>
+        <button onclick="quitGame()">Quit</button>
+    </div>
+
+    <script>
+        const scenarios = [
+            { image: "./images/car.jpt", text: "You bought a new car for your business.", type: "asset" },
+            { image: "./images/BusinessLoan.jpg", text: "You owe money on a business loan.", type: "liability" },
+            { image: "./images/Land.jpg", text: "You own a piece of land.", type: "asset" },
+            { image: "./images/CreditCard.jpg", text: "You have an outstanding credit card debt.", type: "liability" },
+            { image: "./images/stock portfolio.jpeg", text: "You invested in a stock portfolio.", type: "asset" },
+            { image: "./images/house.jpg", text: "You have a mortgage on your house.", type: "liability" },
+            { image: "./images/OfficeFurniture.jpg", text: "You own office furniture.", type: "asset" },
+            { image: "./images/BackTaxes.jpg", text: "You owe back taxes.", type: "liability" },
+            { image: "./images/RentalProperty.jpg", text: "You own a rental property.", type: "asset" },
+            { image: "./images/StudentLoan.jpeg", text: "You have a student loan.", type: "liability" },
+            { image: "./images/manufacturing equipment.png", text: "You purchased manufacturing equipment.", type: "asset" },
+            { image: "./images/Patent_Invention.png", text: "You owe payments for leased equipment.", type: "liability" },
+            { image: "./images/invention.jpg", text: "You own a patent for an invention.", type: "asset" },
+            { image: "./images/FamilyBorrow.png", text: "You borrowed money from a family member.", type: "liability" },
+            { image: "./images/fleet of delivery trucks.png", text: "You own a fleet of delivery trucks.", type: "asset" },
+            { image: "./images/suppliers.jpeg", text: "You owe money to suppliers.", type: "liability" },
+            { image: "./images/gold and silver assets.png", text: "You own gold and silver assets.", type: "asset" },
+            { image: "./images/unpaid utility bills.png", text: "You have unpaid utility bills.", type: "liability" },
+            { image: "./images/shares in a private company.png", text: "You own shares in a private company.", type: "asset" },
+            { image: "./images/car loan payments.png", text: "You owe car loan payments.", type: "liability" },
+            { image: "./images/collection of fine art.png", text: "You own a collection of fine art.", type: "asset" },
+            { image: "./images/phone bill.jpg", text: "You have an outstanding phone bill.", type: "liability" },
+            { image: "./images/real estate trust.jpg", text: "You invested in a real estate trust.", type: "asset" },
+            { image: "./images/capital gains.jpg", text: "You owe taxes on capital gains.", type: "liability" },
+            { image: "./images/cryptocurrency.jpg", text: "You own cryptocurrency holdings.", type: "asset" },
+            { image: "./images/equipment lease.jpeg", text: "You owe payment on an equipment lease.", type: "liability" },
+            { image: "./images/vacation home.jpg", text: "You own a vacation home.", type: "asset" },
+            { image: "./images/medical bills to pay.jpg", text: "You have medical bills to pay.", type: "liability" },
+            { image: "./images/bakery and its equipment.jpg", text: "You own a bakery and its equipment.", type: "asset" },
+            { image: "./images/inventory.jpg", text: "You owe money for purchased inventory.", type: "liability" },
+            { image: "./images/company vehicle.jpg", text: "You own a company vehicle.", type: "asset" },
+            { image: "./images/legal fees.jpg", text: "You owe legal fees.", type: "liability" },
+            { image: "./images/franchise.jpg", text: "You own a profitable franchise.", type: "asset" },
+            { image: "./images/office space.jpg", text: "You owe rental payments for office space.", type: "liability" },
+            { image: "./images/advanced software.jpg", text: "You own advanced software licenses.", type: "asset" },
+            { image: "./images/employees.jpeg", text: "You owe compensation to employees.", type: "liability" },
+            { image: "./images/warehouse.jpeg", text: "You own a warehouse.", type: "asset" },
+            { image: "./images/penalties.jpeg", text: "You owe penalties for late payments.", type: "liability" },
+            { image: "./images/high-yield savings.jpg", text: "You invested in a high-yield savings account.", type: "asset" },
+            { image: "./images/rent of apartment.jpeg", text: "You have unpaid rent on your apartment.", type: "liability" },
+            // Add more scenarios as needed, ensuring variety and a mix of assets and liabilities.
+        ];
+        
+        let score = 0;
+        let lifelines = 3;
+        let usedIndices = new Set();
+
+        function getRandomScenario() {
+            if (usedIndices.size === scenarios.length) usedIndices.clear();
+
+            let index;
+            do {
+                index = Math.floor(Math.random() * scenarios.length);
+            } while (usedIndices.has(index));
+
+            usedIndices.add(index);
+            return scenarios[index];
+        }
+
+        function updateScenario() {
+            const scenario = getRandomScenario();
+            document.getElementById('scenario-image').src = scenario.image;
+            document.getElementById('scenario-text').innerText = scenario.text;
+            document.getElementById('scenario-image').alt = scenario.text;
+            document.getElementById('scenario-image').style.display = 'block';
+        }
+        const correct = new Audio('./sound/correct-sound.mp3');
+        const wrong = new Audio('./sound/wrong-sound.mp3'); // Updated
+        const mouseclick = new Audio('./sound/mouse-click-sound.mp3');
+        const popupSound = new Audio('./sound/gameover-sound.mp3');
+
+        function answer(userAnswer) {
+            const currentScenario = scenarios[Array.from(usedIndices).pop()];
+
+            if (userAnswer === currentScenario.type) {
+                correct.play();
+                score++;
+                document.getElementById('score').innerText = `Score: ${score}`;
+            } else {
+                wrong.play();
+                lifelines--;
+                updateLifelines();
+                if (lifelines === 0) {
+                    gameOver();
+                    return;
+                }
+            }
+
+            updateScenario();
+        }
+
+        function updateLifelines() {
+            document.getElementById('lifelines').innerText = `Lifelines: ${'❤'.repeat(lifelines)}`;
+        }
+        function gameOver() {
+            popupSound.play();
+            document.getElementById('final-score').innerText = `Your Score: ${score}`;
+            document.getElementById('popup').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function restartGame() {
+            mouseclick.play();
+            score = 0;
+            lifelines = 3;
+            usedIndices.clear();
+
+            document.getElementById('score').innerText = `Score: ${score}`;
+            updateLifelines();
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+
+            updateScenario();
+        }
+
+        function quitGame() {
+            mouseclick.play();
+            alert("Thanks for playing!");
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        // Initialize game
+        updateScenario();
+    </script>
+</body>
+</html>
